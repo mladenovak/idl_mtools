@@ -1,4 +1,5 @@
-
+; perform a simple rms weighted mosaic of multiple overlapping pointings
+; by default, cubic interpolation is used for subpixel positioning
 pro mosaic, outfile, pathsP, pathsPB, $
 	sizeX=sizeX, sizeY=sizeY, raCenter=raCenter, decCenter=decCenter, $
 	noregrid=noregrid, linregrid=linregrid, $
@@ -97,7 +98,6 @@ pro mosaic, outfile, pathsP, pathsPB, $
 			initialize=1
 		endif
 
-
 		SXADDPAR, headM, 'HISTORY', 'Adding: '+ FILE_BASENAME(pathP, '.fits')
 
 		; get center
@@ -110,7 +110,6 @@ pro mosaic, outfile, pathsP, pathsPB, $
 		;print, 'center in new coord:',[pxm, pym]
 		print, 'center in float coord:',pxm,pym
 
-
 		;PB
 		newPB=pathsPB[idx]
 		if(newPB ne pathPB) then begin
@@ -122,7 +121,6 @@ pro mosaic, outfile, pathsP, pathsPB, $
 			endif else begin
 				response=readfits(pathPB, headW)
 			endelse
-
 			; create a pb response, works only for 3 GHz
 			;response=getPointingResponse(headP,psize=getPointingSize(dataP,headP), feather=3) $
 		endif
@@ -136,7 +134,6 @@ pro mosaic, outfile, pathsP, pathsPB, $
 		if KEYWORD_SET(rmsMap) then begin
 			print, 'RMS from second input map'
 			weight=addw*(1./response)^2
-			
 			
 			rms=mean(response[where(finite(response) eq 1 and response gt 0)])
 			;rms=min(response[where(finite(response) eq 1)])
@@ -156,13 +153,10 @@ pro mosaic, outfile, pathsP, pathsPB, $
 				print, 'RMS = '+str(rms)
 			endif
 
-
 			weight=addw*(response/rms)^2
-
 		endelse
 
 		; No fancy regridding, all images should have same pixel size and rot
-
 		if KEYWORD_SET(noregrid) then begin
 			;round the center pixel to nearest one in mosaic
 			print, 'Nearest neighbour gridding.'
@@ -184,7 +178,6 @@ pro mosaic, outfile, pathsP, pathsPB, $
 		print, 'center in new coord:',CenterMpix
 		SXADDPAR, headM, 'HISTORY', 'Centered at: ' + str(CenterMpix[0]) + ', '+str(CenterMpix[1])
 
-
 		dataP=dataP*weight
 
 		if doEffFreq then freqP=freq*weight
@@ -193,10 +186,8 @@ pro mosaic, outfile, pathsP, pathsPB, $
 		centralFreq+=freq*addw/rms^2
 		centralFreqW+=1.*addw/rms^2
 
-
 		sizeX=(size(dataP))[1]
 		sizeY=(size(dataP))[2]
-
 
 		; consider edges of the final image
 		left=centerMpix[0]-centerPpix[0]
@@ -216,11 +207,8 @@ pro mosaic, outfile, pathsP, pathsPB, $
 		;inf='Pointing['+str(cropLeft)+':'+str(cropRight-1)+', '+ str(cropBottom)+':'+str(cropTop-1)+']'+$
 		;	' -> Mosaic['+str(left+cropLeft)+':'+str(right+cropRight)+', '+ str(bottom+cropBottom)+':'+str(top+cropTop)+']'
 
-
 		if(not notInMosaic)then begin
-
 			print, 'Copying data to mosaic'
-
 			partP=dataP[cropLeft:(cropRight-1), cropBottom:(cropTop-1)]
 			w=where(finite(partP) eq 0)
 
@@ -262,7 +250,6 @@ pro mosaic, outfile, pathsP, pathsPB, $
 	;SXADDPAR, headM, 'DATAMAX', max(dataM[where(finite(dataM))]), BEFORE='HISTORY'
 	;SXADDPAR, headM, 'DATAMIN', min(dataM[where(finite(dataM))]), BEFORE='HISTORY'
 
-
 	SXADDPAR, headM, 'HISTORY', timenow()+' IDL end'
 	SXADDPAR, headM, 'DATE', timenow()
 
@@ -274,6 +261,7 @@ pro mosaic, outfile, pathsP, pathsPB, $
 	print, 'Fits file written in ',outfile+'.fits'
 end
 
+; Perform sub pixel interpolation of an image using cubic or linear interpolation
 pro regrid, im, xpix, ypix, cubic=cubic ;linear
 
 	;xpix, ypicx - pixel position of new image in the underlaying grid
@@ -291,14 +279,11 @@ pro regrid, im, xpix, ypix, cubic=cubic ;linear
 	sizeX=(size(im))[1]
 	if(sizedim lt 2) then sizeY=0 else sizeY=(size(im))[2]
 
-
-
 	;print,'sizex',sizex
 	;print,'sizey',sizey
 
 	;craete buffer image
 	imBuff = im*0.
-
 
 	;cubic interpol
 	if(KEYWORD_SET(cubic)) then begin
@@ -362,6 +347,7 @@ pro regrid, im, xpix, ypix, cubic=cubic ;linear
 	endelse
 end
 
+; compute rms of a smaller cutout in an image by fitting a Gaussian to the pixel distribution
 pro rmsGauss, im, rms, ra, dec, radius, head=head, plotX=ooo, plotYhisto=h, plotYgauss=gaus, nomirror=nomirror, origunit=origunit, binsize=binsize
 	;ra&dec in deg
 	;radius in arcmin, if 0 use all image
@@ -383,11 +369,8 @@ pro rmsGauss, im, rms, ra, dec, radius, head=head, plotX=ooo, plotYhisto=h, plot
 		s=radius/60./astr.cdelt[1]
 		;print,'s',s
 	endif
-	
-	
-	
+		
 	if s gt 0 then	begin
-	
 		l=round(px-s)
 		r=round(px+s)
 		b=round(py-s)
@@ -401,10 +384,8 @@ pro rmsGauss, im, rms, ra, dec, radius, head=head, plotX=ooo, plotYhisto=h, plot
 		b=min([max([0, b]), maxy])
 		t=min([max([0, t]), maxy])
 		
-		
 		aQuad=im[l:r,b:t]
 	endif else aQuad=im
-	
 	
 	aQuad=aQuad(where(finite(aQuad))) ; makni NaN 
 	
@@ -421,13 +402,8 @@ pro rmsGauss, im, rms, ra, dec, radius, head=head, plotX=ooo, plotYhisto=h, plot
 	endelse
 	
 	if N_ELEMENTS(z) gt 5 then begin
-		
-		
 		if(not KEYWORD_SET(binsize)) then binsize=0.1
-	
-		;print,'binsize',binsize
 
-	
 		h=hist1d(z, binsize=binsize,obin=ooo) ; histogram, obin su lokacije binova
 		
 		gaus = GAUSSFIT(ooo, h, param, NTERMS=3)
@@ -435,8 +411,8 @@ pro rmsGauss, im, rms, ra, dec, radius, head=head, plotX=ooo, plotYhisto=h, plot
 	endif
 end
 
+; compute an rms map of the input image by performing a sliding box
 function rmsMap, im, boxsize, increment
-
 	;copy image
 	mapa=im
 	mapa[*]=!VALUES.F_NAN
@@ -452,9 +428,7 @@ function rmsMap, im, boxsize, increment
 	needValidPix=3
 
 	for i = 0L+increment/2, maxx, increment do begin
-
 		for j = 0L+increment/2, maxy, increment do begin
-
 			rms=!VALUES.F_NAN
 
 			;using histogram + gauss method
@@ -506,8 +480,6 @@ function rmsMap, im, boxsize, increment
 		endfor
 		print, 'Progress: '+string(float(i+1)/(maxx)*100, format='(i4)')+'%'
 	endfor
-
-
 
 	;interpolate
 	print,'interpolate x'
