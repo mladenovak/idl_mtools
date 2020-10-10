@@ -1,5 +1,6 @@
 
 pro mtools
+	; test
 	racen=150.1191667d
 	decen=2.2058333d
 	r=0.5*sqrt(2)
@@ -7,15 +8,16 @@ pro mtools
 
 end
 
+; compute radio spectrum at specific frequency assuming a power law with a spectral index of alpha
 function radiospec, flux0, freq0, freq1, alpha
 	return, flux0*(freq1/freq0)^alpha
 end
 
+; writes columns of data into a file, adapted function
 pro writecol_ml, file, v1, v2, v3, v4, v5, v6, v7, v8, v9, $
 	v10, v11, v12, v13, v14, v15, v16, v17, v18, v19, v20,v21,v22,v23,v24,$
 	v25,v26,v27,v28,v29,v30,v31,v32,v33,v34,$
 	FMT=fmt, FILNUM=filnum, head=head
-
 
 	; writecol -- Writes a 2 column ascii file
 
@@ -25,15 +27,11 @@ pro writecol_ml, file, v1, v2, v3, v4, v5, v6, v7, v8, v9, $
 		return
 	endif
 
-	;
-
 	flgvn = N_params()-1
 	if not keyword_set( FMT ) then    flgfmt    = 0 else begin
 		flgfmt = 1
 		fmt = fmt[0]
 	endelse
-
-	;
 
 	if not keyword_set(FILNUM) then begin
 		filnum = 91
@@ -139,36 +137,33 @@ pro writecol_ml, file, v1, v2, v3, v4, v5, v6, v7, v8, v9, $
 		endcase
 	endfor
 	if keyword_set(FLG_FIL) then close, filnum
-
-
 	return
 end
 
+; compute area in square degres
 function area_deg2, ramin,ramax,decmin,decmax
 	return,(ramax-ramin)*( sin(decmax*!pi/180.) - sin(decmin*!pi/180.) )*180./!pi
 end
 
-
+; Gaussian function, not normalized
 function gauss, x, gausparams	
 	A=gausparams[0]
 	mu=gausparams[1]
 	sigma=gausparams[2]
 	
 	; FWHM = 2*sqrt(ln(4))*sigma
-	
 	return, A*exp(-0.5*((x-mu)/sigma)^2 )
 end
 
+; Gaussian function, normalized
 function gaussnorm, x, mu, sig
 
 	; FWHM = 2*sqrt(ln(4))*sigma
-
 	return, 1./(sig*sqrt(2*!pi))*exp(-0.5*((x-mu)/sig)^2 )
 end
 
-
+; generate equaly spaced numbers between two extreme values (including them as well)
 function genrange, first, last, num, bin=bin
-	; generate equaly spaced numbers between two extreme values (including them as well)
 	; optional: define bin instead of total numbers
 
 	if KEYWORD_SET(bin) then begin
@@ -183,8 +178,8 @@ function genrange, first, last, num, bin=bin
 	return,-1
 end
 
+; generate histograms (h) using user defined bin edges (bins)
 pro histomla, bins, data, h, plotx, ploty, bincen, logcen=logcen
-	; generate histograms (h) using user defined bin edges (bins)
 	; output histogram line for plotting (each bin reaches 0)
 	; bincen are centers of bins (for fitting)
 	; use logcen if geometrical mean for bincenter is prefered to arithmetical
@@ -213,6 +208,7 @@ pro histomla, bins, data, h, plotx, ploty, bincen, logcen=logcen
 
 end
 
+; calculate specific percentile of the input array
 function percentile, arr, perc, gauss=gauss, interq=interq
 
 	if(not KEYWORD_SET(perc)) then perc=[0,0.5,1]
@@ -226,35 +222,34 @@ function percentile, arr, perc, gauss=gauss, interq=interq
 	return, perc
 end
 
-
+; new line string
 function newline
 	if (!D.NAME eq 'WIN') then nl = string([13B, 10B]) else nl = string(10B)
-	
 	return, nl
 end
 
+; tab string
 function tab
 	return,STRING(9B)
 end
 
+; convert to string function
 function str, input, f=f
 	;float and double will have god output now
 	if( input eq !NULL)then return, ''
 	
-
 	if(KEYWORD_SET(f))then return, strtrim(string(input,format='(F)'),2) $
 	else return, strtrim(input,2)
 end
 
+; convert to string, add a sign in front
 function strsign,num
 	if num lt 0 or num eq 0 then return, string(num, FORMAT = '(F0.1)')
 	if num gt 0 then return ,'+'+string(num, FORMAT = '(F0.1)')
 end
 
-
-
+; get timestamp
 function timeNow
-
 	time = Systime(UTC=Keyword_Set(utc))
 	
 	;weekday = Strmid(time, 0, 3)
@@ -273,14 +268,10 @@ function timeNow
 	time=Strmid(time,0,19)
 	;if KEYWORD_SET(casa) then time+='.000000'
 	
-	
 	return, time
-	
 end
 
-
-
-
+; start plotting
 pro openplot, filename, ps, xs, ys
 	!p.multi=0
 	if(not KEYWORD_SET(ps))then ps=0
@@ -309,16 +300,15 @@ pro openplot, filename, ps, xs, ys
 	endelse
 end
 
+; end plotting
 pro closeplot, ps
 	;if(not KEYWORD_SET(ps))then ps=-1
 	if (ps eq 1) then device, /close
 	;openplot
 end
 
-
-
+; color presets
 pro colors,black,white,gray,red,magenta,purple,blue,cyan,green,darkgreen,pink
-
 	loadct,12, /silent
 	
 	black=0
@@ -334,10 +324,8 @@ pro colors,black,white,gray,red,magenta,purple,blue,cyan,green,darkgreen,pink
 	pink=208
 end
 
-
+; read a file into array
 function readTxt, path
-
-
 	OPENR, 1, path
 	; Read one line at a time, saving the result into array
 	array = ''
@@ -346,14 +334,14 @@ function readTxt, path
 		READF, 1, line & $
 		array = [array, line] & $
 	ENDWHILE
-; Close the file and free the file unit
-close,1
+	; Close the file and free the file unit
+	close,1
 
-return, array
+	return, array
 end
 
+; write out region file for DS9, also a mask file for CASA
 pro ds9reg,path, ras,decs, ids=ids, colors=colors, sizes=sizes, casa=casa
-
 	num=N_ELEMENTS(ras)
 
 	if(not KEYWORD_SET(colors)) then begin
@@ -401,9 +389,7 @@ pro ds9reg,path, ras,decs, ids=ids, colors=colors, sizes=sizes, casa=casa
 		if(KEYWORD_SET(casa)) then begin
 			;printf,2,'circle[['+str(ras[i],/f)+'deg,'+str(decs[i],/f)+'deg], '+str(sizes[i])+'arcsec]'
 			printf,2,'circle[['+string(ras[i],format='(F11.6)')+'deg,'+string(decs[i],format='(F11.6)')+'deg], '+string(sizes[i],format='(F7.3)')+'arcsec]'
-
 		endif
-		
 	endfor
 
 	close,1
@@ -413,11 +399,10 @@ pro ds9reg,path, ras,decs, ids=ids, colors=colors, sizes=sizes, casa=casa
 		close,2
 		print, 'Clean file written: ', filename2
 	endif
-
 end
 
+; write masks for outlier fields
 pro ds9regFlank,path, ras,decs, ids=ids, colors=colors, sizes=sizes, casa=casa
-
 	; size of the outlier image is currently fixed to 128x128pix regardless of the size input
 
 	num=N_ELEMENTS(ras)
@@ -464,8 +449,6 @@ pro ds9regFlank,path, ras,decs, ids=ids, colors=colors, sizes=sizes, casa=casa
 	endif
 
 	for i = 0L, N_ELEMENTS(ras)-1 do begin
-		
-
 		printf,1, 'box('+string(ras[i],format='(F13.6)')+','+string(decs[i],format='(F13.6)')+','+string(sizes[i],format='(F7.3)')+'"'+','+string(sizes[i],format='(F7.3)')+'"'+',0) # text={'+str(ids[i])+'} color='+colors[i],format='(a)'
 
 		if(KEYWORD_SET(casa)) then begin
@@ -475,9 +458,7 @@ pro ds9regFlank,path, ras,decs, ids=ids, colors=colors, sizes=sizes, casa=casa
 			printf,2,'imagename="'+str(ids[i])+'"'
 			printf,2,'imsize=[128,128]'
 			printf,2,'phasecenter="J2000 '+string(ras[i],format='(F13.6)') + 'deg ' +string(decs[i],format='(F13.6)')+'deg"'
-
 		endif
-
 	endfor
 
 	close,1
@@ -490,14 +471,11 @@ pro ds9regFlank,path, ras,decs, ids=ids, colors=colors, sizes=sizes, casa=casa
 
 end
 
-
-
+; perform a 2D Gaussian imfit in CASA and parse the output
 pro casafit, dir, file, ra, dec, s, params, paramnames, print=printres
 	;ra, dec in degs, s in arcsec
-	casa="/home/vernesa/casapy-40.0.22208-002-64b/casapy"
-	;script="/home/mladen/cosmos/spw/fluxfit.py"
-	
-	
+	; must set this
+	casa="path-to-casa-executable"
 	
 	params=[0]
 	paramnames=['']
@@ -510,7 +488,6 @@ pro casafit, dir, file, ra, dec, s, params, paramnames, print=printres
 	pytxt="imfit('"+file+"', region='centerbox[["+str(ra)+"deg, "+str(dec)+"deg], ["+str(s*2)+"arcsec"+","+str(s*2)+"arcsec"+"]]', logfile='"+logfile+"')"
 	
 	if(KEYWORD_SET(printres)) then print,pytxt
-	
 	
 	openw,1,scriptfile
 	printf,1,pytxt,format='(a)'
@@ -525,8 +502,7 @@ pro casafit, dir, file, ra, dec, s, params, paramnames, print=printres
 	if(KEYWORD_SET(printres)) then print,script
 	spawn, script,result,/STDERR
 	
-	
-	
+
 	result=readtxt(logfile)
 	
 	if (!D.NAME eq 'WIN') then newline = string([13B, 10B]) else newline = string(10B)
@@ -538,11 +514,9 @@ pro casafit, dir, file, ra, dec, s, params, paramnames, print=printres
 	
 	if(KEYWORD_SET(printres)) then print,result
 	
-	
 	num="[ ]*([:\*0-9E\.\+\-]+)" ;number
 	pm="[ ]*\+/\-" ;plus-minus sign
 	spc="[ ]*"
-	
 	
 	rx=STREGEX(result, "--- Integrated:"+num+pm+num+" ([a-zA-Z]+)"+newline,/SUBEXPR,/EXTRACT)
 	if(rx[0] ne '') then begin
@@ -553,7 +527,6 @@ pro casafit, dir, file, ra, dec, s, params, paramnames, print=printres
 		if unit eq 'uJy' then fac=1
 		if unit eq 'mJy' then fac=1e3
 		if unit eq 'Jy' then fac=1e6
-		
 		
 		params=[params,double(rx[1]*fac)]
 		params=[params,double(rx[2])*fac]
@@ -570,19 +543,15 @@ pro casafit, dir, file, ra, dec, s, params, paramnames, print=printres
 		if unit eq 'mJy' then fac=1e3
 		if unit eq 'Jy' then fac=1e6
 		
-		
 		params=[params,double(rx[1]*fac)]
 		params=[params,double(rx[2])*fac]
 		paramnames=[paramnames, 'peak']
 		paramnames=[paramnames, 'peakerr']
 	endif
 	
-	
-	
 	rx=STREGEX(result, "Position ---"+newline+spc+"--- ra:"+num+pm+num + " s \("+num+" arcsec\)" + newline+$
 		"[ ]*--- dec:"+num+pm+num+" arcsec",/SUBEXPR,/EXTRACT)
 	if(rx[0] ne '') then begin
-	
 		ra=rx[1]
 		dec=rx[4]
 		
@@ -596,8 +565,7 @@ pro casafit, dir, file, ra, dec, s, params, paramnames, print=printres
 		paramnames=[paramnames, 'ra']
 		paramnames=[paramnames, 'dec']
 	endif
-	
-	
+
 	rx=STREGEX(result, "--- major axis FWHM:" + num + pm + num + " ([a-zA-Z]+)"+newline,/SUBEXPR,/EXTRACT)
 	if(rx[0] ne '') then begin
 		fac=1.
@@ -611,7 +579,6 @@ pro casafit, dir, file, ra, dec, s, params, paramnames, print=printres
 		params=[params,double(rx[2])*fac]
 		paramnames=[paramnames, 'bmaj']
 		paramnames=[paramnames, 'bmajerr']
-		
 	endif
 	
 	rx=STREGEX(result, "--- minor axis FWHM:" + num + pm + num + " ([a-zA-Z]+)"+newline,/SUBEXPR,/EXTRACT)
@@ -621,28 +588,23 @@ pro casafit, dir, file, ra, dec, s, params, paramnames, print=printres
 		
 		if unit eq 'marcsec' then fac=1e-3
 		if unit eq 'arcsec' then fac=1.
-		
-		
+
 		params=[params,double(rx[1]*fac)]
 		params=[params,double(rx[2])*fac]
 		paramnames=[paramnames, 'bmin']
 		paramnames=[paramnames, 'bminerr']
-		
 	endif
 	
 	rx=STREGEX(result, "--- position angle:" + num + pm + num + " deg"+newline,/SUBEXPR,/EXTRACT)
 	if(rx[0] ne '') then begin
-	
-	
 		params=[params,double(rx[1])]
 		params=[params,double(rx[2])]
 		paramnames=[paramnames, 'bpa']
 		paramnames=[paramnames, 'bpaerr']
-		
 	endif
-	
 end
 
+; automate a function from miriad: import
 function mirImport, dir, file, print=pr, check=check
 	cd, dir
 	
@@ -663,7 +625,6 @@ function mirImport, dir, file, print=pr, check=check
 		if(ext eq '.mir') then begin
 			return, file
 		endif
-		
 	endif
 	
 	print,dir + '/' + file
@@ -675,30 +636,25 @@ function mirImport, dir, file, print=pr, check=check
 	if(KEYWORD_SET(pr)) then print,result
 	
 	return, file+'.mir'
-
 end
 
+; automate a function from miriad: adxy, coordinate conversion
 pro mirAdxy, dir, file, ra, dec, px,py, value, nearpx, nearpy, print=pr,import=import
 
 	mirfile=file
 	if(KEYWORD_SET(import)) then mirfile=mirImport(dir, file, /check)
 	
-	
 	num="[ ]*([:\*0-9E\.\+\-]+)" ;number
 	pm="[ ]*\+/\-" ;plus-minus sign
 	spc="[ ]*" ;space
 	if (!D.NAME eq 'WIN') then newline = string([13B, 10B]) else newline = string(10B)
 	
-	
 	script="impos in="+mirfile+" type=absdeg coord="+str(ra,/f)+','+str(dec,/f)+""
-	
-	
 	spawn, script, result,/STDERR
 	
 	r=""
 	for i = 0L, N_ELEMENTS(result)-1 do r+=result[i]+newline
 	result=r
-	
 	
 	if(KEYWORD_SET(pr)) then print, script
 	if(KEYWORD_SET(pr)) then print, result
@@ -720,12 +676,10 @@ pro mirAdxy, dir, file, ra, dec, px,py, value, nearpx, nearpy, print=pr,import=i
 		+"Axis 2: DEC--NCP =" + num $
 		,/SUBEXPR,/EXTRACT)
 
-		
 	px=-99
 	py=-99
 	if(rx[1] ne '')then px=double(rx[1])
 	if(rx[2] ne '')then py=double(rx[2])
-	
 	
 	nearpx=-99
 	nearpy=-99
@@ -734,37 +688,29 @@ pro mirAdxy, dir, file, ra, dec, px,py, value, nearpx, nearpy, print=pr,import=i
 	if(rx[1] ne '')then nearpx=long(rx[1])
 	if(rx[2] ne '')then nearpy=long(rx[2])
 	if(rx[3] ne '')then value=double(rx[3])
-	
 end
 
-
+; automate a function from miriad: adxy, coordinate conversion
 pro mirAdxyPath, path, ra, dec, px,py, value, nearpx, nearpy, print=pr,import=import
-
 	file=FILE_BASENAME(path)
 	dir=FILE_DIRNAME(path)
 
 	cd, dir
-	
 	mirfile=file
 
 	if(KEYWORD_SET(import)) then mirfile=mirImport(dir, file, /check)
-
 
 	num="[ ]*([:\*0-9E\.\+\-]+)" ;number
 	pm="[ ]*\+/\-" ;plus-minus sign
 	spc="[ ]*" ;space
 	if (!D.NAME eq 'WIN') then newline = string([13B, 10B]) else newline = string(10B)
 
-
 	script="impos in="+mirfile+" type=absdeg coord="+str(ra,/f)+','+str(dec,/f)+""
-
-
 	spawn, script, result,/STDERR
 
 	r=""
 	for i = 0L, N_ELEMENTS(result)-1 do r+=result[i]+newline
 	result=r
-
 
 	if(KEYWORD_SET(pr)) then print, script
 	if(KEYWORD_SET(pr)) then print, result
@@ -786,12 +732,10 @@ pro mirAdxyPath, path, ra, dec, px,py, value, nearpx, nearpy, print=pr,import=im
 		+"Axis 2: DEC--NCP =" + num $
 		,/SUBEXPR,/EXTRACT)
 
-
 	px=-99
 	py=-99
 	if(rx[1] ne '')then px=double(rx[1])
 	if(rx[2] ne '')then py=double(rx[2])
-
 
 	nearpx=-99
 	nearpy=-99
@@ -800,24 +744,20 @@ pro mirAdxyPath, path, ra, dec, px,py, value, nearpx, nearpy, print=pr,import=im
 	if(rx[1] ne '')then nearpx=long(rx[1])
 	if(rx[2] ne '')then nearpy=long(rx[2])
 	if(rx[3] ne '')then value=double(rx[3])
-
 end
 
-
+; automate a function from miriad: xyad, coordinate conversion
 pro mirXyad, dir, file, px,py, ra,dec, value, nearpx, nearpy, print=pr,import=import
 
 	mirfile=file
 	if(KEYWORD_SET(import)) then mirfile=mirImport(dir, file, /check)
-	
-	
+		
 	num="[ ]*([:\*0-9E\.\+\-]+)" ;number
 	pm="[ ]*\+/\-" ;plus-minus sign
 	spc="[ ]*" ;space
 	if (!D.NAME eq 'WIN') then newline = string([13B, 10B]) else newline = string(10B)
 	
-	
 	script="impos in="+mirfile+" type=abspix coord="+str(px,/f)+','+str(py,/f)+""
-	
 	
 	spawn, script, result,/STDERR
 	
@@ -827,7 +767,6 @@ pro mirXyad, dir, file, px,py, ra,dec, value, nearpx, nearpy, print=pr,import=im
 	
 	if(KEYWORD_SET(pr)) then print, script
 	if(KEYWORD_SET(pr)) then print, result
-	
 	
 	rx=STREGEX(result, 'World coordinates'+newline $
 		+"Axis 1: RA---SIN =" + num + newline $
@@ -845,9 +784,9 @@ pro mirXyad, dir, file, px,py, ra,dec, value, nearpx, nearpy, print=pr,import=im
 	if(rx[1] ne '')then nearpx=long(rx[1])
 	if(rx[2] ne '')then nearpy=long(rx[2])
 	if(rx[3] ne '')then value=double(rx[3])
-	
 end
 
+; automate a function from miriad: statistics, compute rms
 pro mirRMS, dir, file, ra, dec, s, rms, freq, print=pr,import=import ;s in arcmin
 
 	cd, dir
@@ -864,10 +803,8 @@ pro mirRMS, dir, file, ra, dec, s, rms, freq, print=pr,import=import ;s in arcmi
 	spawn, script, result,/STDERR
 	;print,result
 	
-	
 	if(KEYWORD_SET(pr)) then print,script
 	if(KEYWORD_SET(pr)) then print,result
-	
 	
 	num="[ ]*([:\*0-9E\.\+\-]+)" ;number
 	pm="[ ]*\+/\-" ;plus-minus sign
@@ -889,7 +826,6 @@ pro mirRMS, dir, file, ra, dec, s, rms, freq, print=pr,import=import ;s in arcmi
 		if(rx[5] ne '')then rms=double(rx[5]) else rms=-99 
 	endif
 	
-
 	;print,'rms',rms
 	;print,'freq',freq
 	
@@ -898,16 +834,13 @@ pro mirRMS, dir, file, ra, dec, s, rms, freq, print=pr,import=import ;s in arcmi
 	;Axis:     3     FREQ
 	;plane   Frequency   Total Flux   Maximum     Minimum     Average       rms
 	;1   2.05205      5.8008E-03  1.4230E-03 -1.1656E-04  3.6926E-07  2.6937E-05
-	
 	;if(KEYWORD_SET(pr)) then print,script
 	;if(KEYWORD_SET(pr)) then print,result
-
 	;print, result
-
 end
 
+; automate a function from miriad: statistics, compute rms
 pro mirRMSpath, path, ra, dec, s, rms, freq, print=pr,import=import ;s in arcmin
-
 	file=FILE_BASENAME(path)
 	dir=FILE_DIRNAME(path)
 	
@@ -925,10 +858,8 @@ pro mirRMSpath, path, ra, dec, s, rms, freq, print=pr,import=import ;s in arcmin
 	spawn, script, result,/STDERR
 	;print,result
 
-
 	if(KEYWORD_SET(pr)) then print,script
 	if(KEYWORD_SET(pr)) then print,result
-
 
 	num="[ ]*([:\*0-9E\.\+\-]+)" ;number
 	pm="[ ]*\+/\-" ;plus-minus sign
@@ -950,7 +881,6 @@ pro mirRMSpath, path, ra, dec, s, rms, freq, print=pr,import=import ;s in arcmin
 		if(rx[5] ne '')then rms=double(rx[5])else rms=-99 
 	endif
 
-
 	;print,'rms',rms
 	;print,'freq',freq
 
@@ -964,10 +894,9 @@ pro mirRMSpath, path, ra, dec, s, rms, freq, print=pr,import=import ;s in arcmin
 	;if(KEYWORD_SET(pr)) then print,result
 
 	;print, result
-
 end
 
-
+; automate a function from miriad: imfit, fit a 2D Gaussian to a source
 pro mirImfit, dir, file, ra, dec, s, params, paramnames, print=pr, import=import
 
 	params=[]
@@ -977,7 +906,6 @@ pro mirImfit, dir, file, ra, dec, s, params, paramnames, print=pr, import=import
 	mirfile=file
 	if(KEYWORD_SET(import)) then mirfile=mirImport(dir, file, /check)
 
-	
 	cd, dir
 	;print,'mirfile',mirfile
 	
@@ -1002,10 +930,8 @@ pro mirImfit, dir, file, ra, dec, s, params, paramnames, print=pr, import=import
 	for i = 0L, N_ELEMENTS(result)-1 do r+=result[i]+newline
 	result=r
 	
-	
 	if(KEYWORD_SET(pr)) then print,script
 	if(KEYWORD_SET(pr)) then print,result
-
 
 	;rx=STREGEX(result, 'Fatal Error')
 	;if rx gt 0 then return
@@ -1103,8 +1029,7 @@ pro mirImfit, dir, file, ra, dec, s, params, paramnames, print=pr, import=import
 	;dict=DICTIONARY(paramnames,params)
 end
 
-
-
+; automate a function from miriad
 pro mirImfitPathClip, path, ra, dec, s, params, paramnames, clip, print=pr, import=import
 	
 	;result in Jy
@@ -1245,6 +1170,8 @@ pro mirImfitPathClip, path, ra, dec, s, params, paramnames, clip, print=pr, impo
 
 	;dict=DICTIONARY(paramnames,params)
 end
+
+; automate a function from miriad
 pro mirImfitPath, path, ra, dec, s, params, paramnames, print=pr, import=import
 
 	params=[]
@@ -1382,14 +1309,15 @@ pro mirImfitPath, path, ra, dec, s, params, paramnames, print=pr, import=import
 
 	;dict=DICTIONARY(paramnames,params)
 end
+
 ; +
+; In miriad: Fit a 2D parabola to a source to find a maximum
 ; Usage:
 ; mirMaxfit,dir,file,ra,dec,s,params,pnames,/import;,/print
 ; raPeak=params[where(pnames eq 'ra')]
 ; decPeak=params[where(pnames eq 'dec')]
 ; -
 pro mirMaxfit, dir, file, ra, dec, s, params, paramnames, print=pr, import=import
-
 	params=[]
 	paramnames=[]
 	
@@ -1422,20 +1350,15 @@ pro mirMaxfit, dir, file, ra, dec, s, params, paramnames, print=pr, import=impor
 	for i = 0L, N_ELEMENTS(result)-1 do r+=result[i]+newline
 	result=r
 	
-	
 	if(KEYWORD_SET(pr)) then print,script
 	if(KEYWORD_SET(pr)) then print,result
-
 
 	rx=STREGEX(result, 'Fatal Error')
 	;if rx gt 0 then return
 	
 	rx=STREGEX(result, 'Nothing to fit')
 	;if rx gt 0 then return
-	
-	
-	
-	
+
 	;Peak pixel   : (5050,4202,1) = 5.1668E-05
 	;Fitted pixel : (5048.78,4198.71,1) = 7.6129E-05
 	
@@ -1444,12 +1367,10 @@ pro mirMaxfit, dir, file, ra, dec, s, params, paramnames, print=pr, import=impor
 	params=[params,val]
 	paramnames=[paramnames, 'peakmax']
 
-
 	rx=STREGEX(result, 'Fitted pixel'+spc+': \('+num+','+num+'(,'+num+')?\) = '+num,/SUBEXPR,/EXTRACT)
 	if(rx[5] ne '')then val=double(rx[5]) else val=-99
 	params=[params,val]
 	paramnames=[paramnames, 'peak']
-
 
 	rx=STREGEX(result,"Axis 1: Fitted RA---SIN  =" + num + newline $
 		+spc+"Axis 2: Fitted DEC--SIN  =" + num $
@@ -1458,8 +1379,7 @@ pro mirMaxfit, dir, file, ra, dec, s, params, paramnames, print=pr, import=impor
 		rx=STREGEX(result,"Axis 1: Fitted RA---TAN  =" + num + newline $
 		+spc+"Axis 2: Fitted DEC--TAN  =" + num $
 		,/SUBEXPR,/EXTRACT)
-	
-	
+
 	valra=-99
 	valdec=-99
 	if(rx[1] ne '' and rx[2] ne '') then stringad, rx[1]+' '+rx[2],valra,valdec
@@ -1470,7 +1390,6 @@ pro mirMaxfit, dir, file, ra, dec, s, params, paramnames, print=pr, import=impor
 
 	;print,'valra,valdec',valra,valdec
 
-	
 	if(0) then begin
 		ramax=-1
 		decmax=-1
@@ -1483,8 +1402,7 @@ pro mirMaxfit, dir, file, ra, dec, s, params, paramnames, print=pr, import=impor
 		paramnames=[paramnames, 'ramax']
 		params=[params,decmax]
 		paramnames=[paramnames, 'decmax']
-		
-		
+
 		ramax=-1
 		decmax=-1
 		if(rx[1] ne '' and rx[2] ne '')then begin
@@ -1499,38 +1417,28 @@ pro mirMaxfit, dir, file, ra, dec, s, params, paramnames, print=pr, import=impor
 	
 	;for i = 0L, N_ELEMENTS(params)-1 do begin
 	;	print,paramnames[i],params[i]
-	
 	;endfor
-
-
 	;print,params
-	
 	;mirXyad,dir,mirfile,5048.78d,4198.71d,rafit,decfit
-	
 	;print,rafit,decfit
-
-
 end
 
+; automate a function from miriad
 pro mirMaxfitPath, path, ra, dec, s, params, paramnames, print=pr, import=import
-
 	;result in Jy
-	
+
 	params=[]
 	paramnames=[]
 
 	file=FILE_BASENAME(path)
 	dir=FILE_DIRNAME(path)
-	
 
 	;if input file is in fits format (must have fits extension)
 	mirfile=file
 	if(KEYWORD_SET(import)) then mirfile=mirImport(dir, file, /check)
 
-
 	cd, dir
 	;print,'mirfile',mirfile
-
 	;must escape .^$*+?()[{\|
 
 	;regex blocks
@@ -1552,19 +1460,14 @@ pro mirMaxfitPath, path, ra, dec, s, params, paramnames, print=pr, import=import
 	for i = 0L, N_ELEMENTS(result)-1 do r+=result[i]+newline
 	result=r
 
-
 	if(KEYWORD_SET(pr)) then print,script
 	if(KEYWORD_SET(pr)) then print,result
-
 
 	rx=STREGEX(result, 'Fatal Error')
 	;if rx gt 0 then return
 
 	rx=STREGEX(result, 'Nothing to fit')
 	;if rx gt 0 then return
-
-
-
 
 	;Peak pixel   : (5050,4202,1) = 5.1668E-05
 	;Fitted pixel : (5048.78,4198.71,1) = 7.6129E-05
@@ -1580,7 +1483,6 @@ pro mirMaxfitPath, path, ra, dec, s, params, paramnames, print=pr, import=import
 	params=[params,val]
 	paramnames=[paramnames, 'peak']
 
-
 	rx=STREGEX(result,"Axis 1: Fitted RA---SIN  =" + num + newline $
 		+spc+"Axis 2: Fitted DEC--SIN  =" + num $
 		,/SUBEXPR,/EXTRACT)
@@ -1588,7 +1490,6 @@ pro mirMaxfitPath, path, ra, dec, s, params, paramnames, print=pr, import=import
 		rx=STREGEX(result,"Axis 1: Fitted RA---TAN  =" + num + newline $
 		+spc+"Axis 2: Fitted DEC--TAN  =" + num $
 		,/SUBEXPR,/EXTRACT)
-
 
 	valra=-99
 	valdec=-99
@@ -1599,7 +1500,6 @@ pro mirMaxfitPath, path, ra, dec, s, params, paramnames, print=pr, import=import
 	paramnames=[paramnames, 'dec']
 
 	;print,'valra,valdec',valra,valdec
-
 
 	if(0) then begin
 		ramax=-1
@@ -1613,7 +1513,6 @@ pro mirMaxfitPath, path, ra, dec, s, params, paramnames, print=pr, import=import
 		paramnames=[paramnames, 'ramax']
 		params=[params,decmax]
 		paramnames=[paramnames, 'decmax']
-
 
 		ramax=-1
 		decmax=-1
@@ -1629,16 +1528,9 @@ pro mirMaxfitPath, path, ra, dec, s, params, paramnames, print=pr, import=import
 
 	;for i = 0L, N_ELEMENTS(params)-1 do begin
 	;	print,paramnames[i],params[i]
-
 	;endfor
-
-
 	;print,params
-
 	;mirXyad,dir,mirfile,5048.78d,4198.71d,rafit,decfit
-
 	;print,rafit,decfit
-
-
 end
 
